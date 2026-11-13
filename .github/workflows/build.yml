@@ -1,0 +1,39 @@
+name: Build Sem Visuals
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zipni ochish
+        run: |
+          ZIP="$(ls *.zip | head -1)"
+          echo "Zip: $ZIP"
+          unzip -q -o "$ZIP"
+          ls
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Build
+        run: |
+          cd "$(dirname "$(find . -name gradlew -not -path './.git/*' | head -1)")"
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      - name: Jarni yuklash
+        uses: actions/upload-artifact@v4
+        with:
+          name: sem-visuals-jar
+          path: |
+            **/build/libs/*.jar
+            !**/build/libs/*-sources.jar
+            !**/build/libs/*-dev.jar
